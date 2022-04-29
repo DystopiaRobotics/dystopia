@@ -8,6 +8,12 @@ terraform {
   }
 }
 
+# This is to avoid terraform complaining about no region specified
+provider "aws" {
+  profile = "default"
+  region  = "us-east-1"
+}
+
 # The major region is us-east-1
 variable "aws_region" {
   description = "The AWS region"
