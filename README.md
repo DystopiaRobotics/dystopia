@@ -210,6 +210,8 @@ TF_VAR_aws_access_key_id = <your aws id>
 TF_VAR_aws_secret_access_key = <your aws key>
 ```
 
+AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY is for Terraform Cloud. TF_VAR_aws_access_key_id and TF_VAR_aws_secret_access_key are used by the terraform variables in variables.tf file.
+
 Now when you push to github terraform cloud will automatically attempt an apply, show you the resulting changes, and ask for your manual confirmation of a terraform plan before a terraform apply is run https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs  
   
 Then state is updated and managed in the cloud automatically for you here https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/states
