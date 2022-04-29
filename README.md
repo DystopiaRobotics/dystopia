@@ -84,3 +84,222 @@ This file is part of the Dystopia Robotics project.
 
 The Dystopia Robotics project can not be copied and/or distributed without the express
 permission of Dystopia Robotics chase@dystopiarobotics.com
+
+## For local development
+
+Install homebrew
+
+```
+sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+```
+
+For Unix/Linux OS you might go to the official Terraform site and download bin-file with software.  
+  
+Install docker  
+Download here https://www.docker.com/products/docker-desktop  
+Follow the instructions to install it and start docker desktop  
+  
+Install Postman  
+Download here https://www.postman.com/downloads/  
+Follow the instructions to install it  
+
+Install terraform  
+```
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+```
+
+This was my version of terraform and my providers
+chase@Chases-MacBook-Pro dystopia % terraform --version  
+Terraform v0.14.9
++ provider registry.terraform.io/hashicorp/aws v3.33.0
++ provider registry.terraform.io/hashicorp/template v2.2.0
+
+Install aws cli
+```
+brew install awscli
+```
+
+Install ansible
+```
+brew install ansible
+```
+
+Install postgres
+```
+brew install postgres
+```
+
+Install python annd packages for testing the API
+```
+brew install python3
+pip3 install requests
+pip3 install coolname
+```
+
+## Create an AWS Account
+
+Go through the steps to setup a new AWS account for attaching to Terraform Cloud and login to your root account to get to your [AWS account console](https://us-east-1.console.aws.amazon.com/console/home?region=us-east-1#)
+  
+## Setup AWS credentials
+
+Setup a new user called terraform in us-east-1 that has the "Select AWS credential type" option of "Access key - Programmatic access" checked [using IAM](https://us-east-1.console.aws.amazon.com/iam/home#/users$new?step=details)
+
+The next step is to setup permissions and you should select "Attach existing policies directly" and then choose [AdministratorAccess](https://us-east-1.console.aws.amazon.com/iam/home#/policies/arn%3Aaws%3Aiam%3A%3Aaws%3Apolicy%2FAdministratorAccess)
+
+No need to add any tags
+
+On the review page click "Create User"
+
+The next step you should see an AWS key pair
+
+This AWS key pair you created for the new user called terraform in us-east-1 will be used by terraform for setting up the infrastructure in AWS and use these aws id and keys as `<your aws id>` and `<your aws key>`
+
+Keep this key pair somewhere safe for now by clicking the "Show" link under "Secret access key" to copy and paste it somewhere else and also copy/pasting the "Access key ID"
+
+After you have stored the "Secret access key" i.e. `<your aws key>` and "Access key ID" i.e. `<your aws id>` somewhere safe click close to finish AWS credential setup
+
+## Gain access to a foundation model
+
+Setup a GPT-3 OpenAI access account and use the key found here https://beta.openai.com/docs/developer-quickstart/your-api-keys as `<your OpenAI API key>`
+
+## Make a private and public ssh key pair
+```
+ssh-keygen -t rsa -b 4096 -C "chase.brignac@gmail.com"
+```
+Press enter a few times to accept defaults until the command is done
+
+Start the ssh agent in the background
+```
+eval "$(ssh-agent -s)"
+```
+
+Add SSH private key to the ssh-agent
+```
+ssh-add ~/.ssh/id_rsa
+```
+
+## Update your public key
+
+Put your public ssh key (~/.ssh/id_rsa.pub) in the resource "aws_key_pair" "dystopiarobotics" section of the main.tf terraform file as the string value of public_key in quotation marks so you can attempt connecting to resources later
+  
+You also need to update the IP address allowed to attempt access to resources
+you will find this in the following section:  
+"aws_security_group" "dystopiarobotics_public"
+
+## Setup Terraform Cloud
+
+Setup a [terraform cloud organization](https://app.terraform.io/app/organizations/new)
+  
+Once you have verified your email address by clicking the link sent to the email you used to sign up, [setup a workspace](https://app.terraform.io/app/dystopiarobotics/workspaces/new)
+
+integrate your workspace with your github repo by choosing a type of "Version Control Workflow"
+
+Choose github.com as your version control provider and authorize Terraform to connect with your github account
+
+If the correct repos do not appear to be an option you may need to add an organization repo
+
+Export your sensitive information as environment variables in terraform cloud located [here](https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/variables) under `Environment Variables`
+
+Your environment variables are all sensitive so be sure when you add a variable key value pair you check "sensitive" checkbox
+```
+TF_VAR_openai_api_key = <your OpenAI API key>
+AWS_ACCESS_KEY_ID = <your aws id>
+AWS_SECRET_ACCESS_KEY = <your aws key>
+TF_VAR_aws_access_key_id = <your aws id>
+TF_VAR_aws_secret_access_key = <your aws key>
+```
+
+Now when you push to github terraform cloud will automatically attempt an apply, show you the resulting changes, and ask for your manual confirmation of a terraform plan before a terraform apply is run https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs  
+  
+Then state is updated and managed in the cloud automatically for you here https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/states
+
+Multiple people can use this, you don't always need to terraform apply, and you don't need to manage sensitive passwords or state on your local machine  
+  
+Wait for terraform apply to finish and you should have a green output in your run if all goes well
+
+## Enable ssh key agent forwarding and login to the private instance to setup
+
+Open up your ssh config and edit it making sure to use the IP addresses you just found for your instances in EC2
+```
+nano ~/.ssh/config
+```
+
+```
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+  IdentityFile ~/.ssh/id_rsa
+Host 3.237.80.32
+  HostName 3.237.80.32
+  ForwardAgent yes
+  IdentityFile ~/.ssh/id_rsa
+  User ubuntu
+Host 172.17.0.41
+  User ubuntu
+  IdentityFile ~/.ssh/id_rsa
+  ProxyCommand ssh -W %h:%p 3.237.80.32
+```
+Close the file
+
+Make sure the config file isn't accessible to everyone
+```
+chmod 600 ~/.ssh/config
+```
+
+Now you will login to your private machine without using a bastion with AWS Systems Manager in the AWS console
+```
+ssh -A -i "~/.ssh/id_rsa" ubuntu@public.dystopiarobotics.com
+```
+If you get the error Host key verification failed. you need to open your ~/.ssh/known_hosts file and empty it
+
+This error means that someone may have replaced the instance with another one and is trying to trick you
+
+Usually the simpler explanation is that you yourself or the local infrastructure admin have replaced the instance
+
+But be security minded and be careful
+```
+ssh -o StrictHostKeyChecking=no -i "~/.ssh/id_rsa" ubuntu@private.dystopiarobotics.com
+```
+ssm and aws_instance user_data have put a zipped up version of dystopiarobotics on the instance for your convenience
+```
+cd /data
+```
+
+Press ctrl+D once when you setup the database to get back to your local development machine
+
+## Setup github secrets
+
+Start a new repo in github called dystopiarobotics
+
+If you are not forking the dystopia Github repo and want to initialize the dystopia folder as a git repo
+```
+git init
+git branch -m main
+```
+
+Make sure to setup ssh keys in github and locally using [these instructions](https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh)
+
+Or use HTTPS
+
+Push to github and setup your repo in github to allow Github actions
+```
+git add .
+git commit -m "initial commit"
+git push origin main
+```
+
+Make sure you add AWS_ACCESS_KEY_ID with a value of `<your aws id>` and AWS_SECRET_ACCESS_KEY with a value of `<your aws key>` in your Github secrets, for example Dystopia Robotics secrets are found [here](https://github.com/chasebrignac/dystopiarobotics/settings/secrets/actions)
+
+## Set github workflows environment variables
+
+I have my environment variables set in github workflow but you will need to put your own values in, my settings are [found here](https://github.com/chasebrignac/dystopiarobotics/blob/main/.github/workflows/aws.yml)
+
+## Run a Github action so that you can push an image to ECR and deploy automatically
+
+When you are ready to zip up some of the scripts to put on the private instance run this command
+```
+rm dystopiarobotics.tar.gz && rsync -a *.sql dystopiarobotics && rsync -a *.py dystopiarobotics && rsync -a *.yml dystopiarobotics && rsync -a *.txt dystopiarobotics && rsync -a topics.csv dystopiarobotics && rsync -a Dockerfile dystopiarobotics && rsync -a clf.joblib dystopiarobotics && rsync -a templates dystopiarobotics && rsync -a *.json dystopiarobotics && tar -zcvf dystopiarobotics.tar.gz dystopiarobotics && rm -rf dystopiarobotics
+```
+
+Once you push to github this also updates the version of dystopiarobotics found on the private instance after you destroy the private instance and re-run the terraform apply in terraform cloud
