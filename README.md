@@ -93,7 +93,7 @@ Install homebrew
 sudo /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 ```
 
-For Unix/Linux OS you might go to the official Terraform site and download bin-file with software.  
+For Unix/Linux OS you might go to the official Terraform site and download bin-file with software.
   
 Install docker  
 Download here https://www.docker.com/products/docker-desktop  
