@@ -303,3 +303,7 @@ rm dystopiarobotics.tar.gz && rsync -a *.sql dystopiarobotics && rsync -a *.py d
 ```
 
 Once you push to github this also updates the version of dystopiarobotics found on the private instance after you destroy the private instance and re-run the terraform apply in terraform cloud
+
+## Run Terraform Cloud
+
+Go to [terraform runs](https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs) and press the button that says "Start New Plan"
