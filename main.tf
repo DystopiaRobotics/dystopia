@@ -184,9 +184,9 @@ resource "aws_instance" "dystopiarobotics_private" {
 
   vpc_security_group_ids = [aws_security_group.dystopiarobotics_private.id]
   key_name               = aws_key_pair.dystopiarobotics.key_name
-  iam_instance_profile   = aws_iam_instance_profile.dystopiarobotics_ec2.name
-  depends_on             = [aws_s3_bucket_object.dystopiarobotics_private]
-  user_data              = "#!/bin/bash\necho $USER\ncd /home/ubuntu\npwd\necho beginscript\nsudo apt-get update -y\nsudo apt-get install awscli -y\necho $USER\necho ECS_CLUSTER=dystopiarobotics > /etc/ecs/ecs.config\napt-add-repository --yes --update ppa:ansible/ansible\napt -y install ansible\napt install postgresql-client-common\napt-get -y install postgresql\napt-get remove docker docker-engine docker-ce docker.io\napt-get install -y apt-transport-https ca-certificates curl software-properties-common\nexport AWS_ACCESS_KEY_ID=${aws_ssm_parameter.dystopiarobotics_aws_access_key_id.value}\nexport AWS_SECRET_ACCESS_KEY=${aws_ssm_parameter.dystopiarobotics_secret_access_key.value}\nexport AWS_DEFAULT_REGION=us-east-1\naws s3 cp s3://dystopiarobotics-private/dystopiarobotics.tar.gz ./\ntar -zxvf dystopiarobotics.tar.gz\nmv dystopiarobotics data\napt install python3-pip -y\napt-get install tmux"
+  #iam_instance_profile   = aws_iam_instance_profile.dystopiarobotics_ec2.name
+  depends_on = [aws_s3_bucket_object.dystopiarobotics_private]
+  user_data  = "#!/bin/bash\necho $USER\ncd /home/ubuntu\npwd\necho beginscript\nsudo apt-get update -y\nsudo apt-get install awscli -y\necho $USER\necho ECS_CLUSTER=dystopiarobotics > /etc/ecs/ecs.config\napt-add-repository --yes --update ppa:ansible/ansible\napt -y install ansible\napt install postgresql-client-common\napt-get -y install postgresql\napt-get remove docker docker-engine docker-ce docker.io\napt-get install -y apt-transport-https ca-certificates curl software-properties-common\nexport AWS_ACCESS_KEY_ID=${aws_ssm_parameter.dystopiarobotics_aws_access_key_id.value}\nexport AWS_SECRET_ACCESS_KEY=${aws_ssm_parameter.dystopiarobotics_secret_access_key.value}\nexport AWS_DEFAULT_REGION=us-east-1\naws s3 cp s3://dystopiarobotics-private/dystopiarobotics.tar.gz ./\ntar -zxvf dystopiarobotics.tar.gz\nmv dystopiarobotics data\napt install python3-pip -y\napt-get install tmux"
   # to troubleshoot your user_data logon to the instance and run this
   #cat /var/log/cloud-init-output.log
 
