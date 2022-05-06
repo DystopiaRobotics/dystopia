@@ -236,21 +236,21 @@ resource "aws_iam_policy" "dystopiarobotics_s3_private_read" {
 EOF
 }
 
-# EC2 instance role will have the SSM policy attachment
-resource "aws_iam_role_policy_attachment" "dystopia_ec2_ssm" {
-  role       = aws_iam_role.dystopia_ec2.name
+# EC2 IAM instance role will have the SSM policy attachment
+resource "aws_iam_role_policy_attachment" "dystopiarobotics_ec2_ssm" {
+  role       = aws_iam_role.dystopiarobotics_ec2.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
 }
 
-# EC2 instance role will have the s3 read policy attachment
-resource "aws_iam_role_policy_attachment" "dystopia_ec2_s3" {
-  role       = aws_iam_role.dystopia_ec2.name
-  policy_arn = aws_iam_policy.dystopiarobotics_s3_private_read.name
+# EC2 IAM instance role will have the s3 read policy attachment
+resource "aws_iam_role_policy_attachment" "dystopiarobotics_ec2_s3" {
+  role       = aws_iam_role.dystopiarobotics_ec2.name
+  policy_arn = aws_iam_policy.dystopiarobotics_s3_private_read.arn
 }
 
 # EC2 task role
-resource "aws_iam_role" "dystopia_ec2" {
-  name = "dystopia_ec2"
+resource "aws_iam_role" "dystopiarobotics_ec2" {
+  name = "dystopiarobotics_ec2"
 
   assume_role_policy = <<EOF
 {
@@ -274,12 +274,16 @@ EOF
 # dystopiarobotics s3 bucket
 resource "aws_s3_bucket" "dystopiarobotics_private" {
   bucket = "dystopiarobotics-private"
-  acl    = "private"
 
   tags = {
     Name        = "dystopiarobotics"
     Environment = "production"
   }
+}
+
+resource "aws_s3_bucket_acl" "dystopiarobotics_private" {
+  bucket = aws_s3_bucket.dystopiarobotics_private.id
+  acl    = "private"
 }
 
 # tar-ed up dystopiarobotics directory without terraform files
