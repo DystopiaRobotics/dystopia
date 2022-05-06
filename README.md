@@ -308,4 +308,6 @@ Once you push to github this also updates the version of dystopiarobotics found 
 
 ## Run Terraform Cloud
 
-Go to [terraform runs](https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs) and press the button that says "Start New Plan"
+In order to run the terraform commands in the Makefile you will need to first `terraform login` and follow the instructions to make and locally store your Terraform Cloud API key
+
+Go to [terraform runs](https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs) and after confirming your plan press the button that says "Start New Plan"
