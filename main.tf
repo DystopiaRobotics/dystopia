@@ -159,10 +159,10 @@ resource "aws_route_table_association" "dystopiarobotics_private" {
 
 ### Instances
 
-# instance profile for reading s3 from an EC2 instance
-# which could be useful for prepoluating instances with files
-resource "aws_iam_instance_profile" "dystopiarobotics_s3_private_read" {
-  name = "dystopiarobotics_s3_private_read"
+# instance profile for reading s3 from an EC2 instance or using SSM
+# which could be useful for prepoluating instances with files or logging in securely
+resource "aws_iam_instance_profile" "dystopiarobotics_ec2" {
+  name = "dystopiarobotics_ec2"
 }
 
 resource "aws_key_pair" "dystopiarobotics" {
@@ -184,7 +184,7 @@ resource "aws_instance" "dystopiarobotics_private" {
 
   vpc_security_group_ids = [aws_security_group.dystopiarobotics_private.id]
   key_name               = aws_key_pair.dystopiarobotics.key_name
-  iam_instance_profile   = aws_iam_instance_profile.dystopiarobotics_s3_private_read.name
+  iam_instance_profile   = aws_iam_instance_profile.dystopiarobotics_ec2.name
   depends_on             = [aws_s3_bucket_object.dystopiarobotics_private]
   user_data              = "#!/bin/bash\necho $USER\ncd /home/ubuntu\npwd\necho beginscript\nsudo apt-get update -y\nsudo apt-get install awscli -y\necho $USER\necho ECS_CLUSTER=dystopiarobotics > /etc/ecs/ecs.config\napt-add-repository --yes --update ppa:ansible/ansible\napt -y install ansible\napt install postgresql-client-common\napt-get -y install postgresql\napt-get remove docker docker-engine docker-ce docker.io\napt-get install -y apt-transport-https ca-certificates curl software-properties-common\nexport AWS_ACCESS_KEY_ID=${aws_ssm_parameter.dystopiarobotics_aws_access_key_id.value}\nexport AWS_SECRET_ACCESS_KEY=${aws_ssm_parameter.dystopiarobotics_secret_access_key.value}\nexport AWS_DEFAULT_REGION=us-east-1\naws s3 cp s3://dystopiarobotics-private/dystopiarobotics.tar.gz ./\ntar -zxvf dystopiarobotics.tar.gz\nmv dystopiarobotics data\napt install python3-pip -y\napt-get install tmux"
   # to troubleshoot your user_data logon to the instance and run this
@@ -230,6 +230,39 @@ resource "aws_iam_policy" "dystopiarobotics_s3_private_read" {
                 "arn:aws:ssm:${var.aws_region}:*:parameter/parameter/production/AWS_SECRET_ACCESS_KEY",
                 "arn:aws:ssm:${var.aws_region}:*:parameter/parameter/production/OPENAI_API_KEY"
             ]
+        }
+    ]
+}
+EOF
+}
+
+# EC2 instance role will have the SSM policy attachment
+resource "aws_iam_role_policy_attachment" "dystopia_ec2_ssm" {
+  role       = aws_iam_role.dystopia_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+}
+
+# EC2 instance role will have the s3 read policy attachment
+resource "aws_iam_role_policy_attachment" "dystopia_ec2_s3" {
+  role       = aws_iam_role.dystopia_ec2.name
+  policy_arn = aws_iam_policy.dystopiarobotics_s3_private_read.name
+}
+
+# EC2 task role
+resource "aws_iam_role" "dystopia_ec2" {
+  name = "dystopia_ec2"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+               "Service": "ecs-tasks.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
         }
     ]
 }

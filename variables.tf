@@ -10,7 +10,7 @@ terraform {
 
 # This is to avoid terraform complaining about no region specified
 provider "aws" {
-  region  = "us-east-1"
+  region = "us-east-1"
 }
 
 # The major region is us-east-1
