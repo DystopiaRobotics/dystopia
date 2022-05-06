@@ -311,3 +311,7 @@ Once you push to github this also updates the version of dystopiarobotics found 
 In order to run the terraform commands in the Makefile you will need to first `terraform login` and follow the instructions to make and locally store your Terraform Cloud API key
 
 Go to [terraform runs](https://app.terraform.io/app/dystopiarobotics/workspaces/dystopiarobotics/runs) and after confirming your plan press the button that says "Start New Plan"
+
+## Get GPUs
+
+To get GPUs make sure you reach out to the SALES TEAM and talk to them LIVE as no one else in AWS has a hope of getting your ticket submitted and approved in a day or two
