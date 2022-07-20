@@ -1,0 +1,4 @@
+make: Entering directory `/Users/chase/dystopia'
+terraform fmt -recursive .
+make: Leaving directory `/Users/chase/dystopia'
+ 
