@@ -727,7 +727,7 @@ resource "aws_security_group" "dystopiarobotics_public" {
     protocol    = "tcp"
     from_port   = 22
     to_port     = 22
-    cidr_blocks = ["69.181.183.147/32"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
