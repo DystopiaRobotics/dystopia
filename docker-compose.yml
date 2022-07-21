@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    image: python:3.9
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: app.py
+    ports:
+      - 8080:8080
+    environment:
+    - LOCAL_ENVIRONMENT=True
+    - FLASK_ENV=development
+    - SECRET_KEY
+    - REPLICATE_API_TOKEN
+    - PYTHONUNBUFFERED=1
+    volumes:
+    - .:/app
