@@ -26,17 +26,13 @@
 # on:
 #   release:
 #     types: [created]
+name: Auto Deploy
 on:
   push:
-    branches:
-    - main
-  pull_request:
-
-name: Deploy to Amazon ECS
-
+    branches: [main] # run on pushes to master
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy Dystopia Robotics
     runs-on: ubuntu-latest
     environment: production
 
@@ -55,27 +51,37 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build, tag, and push image to Amazon ECR
+    - name: Build and push
       id: build-image
+      uses: docker/build-push-action@v2
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: dystopiarobotics
+        IMAGE_TAG: ${{ github.sha }}
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:backend
+          
+    - name: Name the image for the next step
+      id: name-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: dystopiarobotics
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build a docker container and
-        # push it to ECR so that it can
-        # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        # name the image
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: dystopiarobotics-backend.json
         container-name: dystopiarobotics-backend
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ steps.name-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
