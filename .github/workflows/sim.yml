@@ -1,0 +1,45 @@
+name: Run tests in simulation
+
+# We only want these changes to run when we push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Let's default to the burger variant of Turtlebot
+env:
+  TURTLEBOT3_MODEL: burger
+
+jobs:
+  simulation:
+    # All steps inside this job will run inside the ROS Melodic container
+    container: public.ecr.aws/docker/library/ros:melodic-robot
+    runs-on: ubuntu-latest
+    # Let's ensure we use bash, and work within our catkin worksapce
+    defaults:
+      run:
+        shell: bash
+        working-directory: catkin_ws/
+    steps:
+      # Check out the code
+      - uses: actions/checkout@v2
+
+      # Install the Turtlebot and Gazebo packages
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y \
+            ros-melodic-turtlebot3 \
+            ros-melodic-turtlebot3-simulations \
+            ros-melodic-gazebo-ros-pkgs \
+            ros-melodic-gazebo-ros-control
+      # Build our workspace
+      - name: Build workspace
+        run: |
+          source /opt/ros/melodic/setup.bash
+          catkin_make
+      # Run our ROS test!
+      - name: Run tests
+        run: |
+          source devel/setup.bash &&
+          rostest my_turtlebot_sim my_turtlebot_sim.test --text
