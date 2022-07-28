@@ -1157,7 +1157,7 @@ resource "aws_ecs_task_definition" "dystopiarobotics_backend" {
   container_definitions = jsonencode([
     {
       name      = "dystopiarobotics-backend"
-      image     = "923082272114.dkr.ecr.us-east-1.amazonaws.com/dystopiarobotics:backend"
+      image     = "708995440211.dkr.ecr.us-east-1.amazonaws.com/dystopiarobotics:backend"
       cpu       = 256
       memory    = 512
       essential = true
@@ -1170,7 +1170,7 @@ resource "aws_ecs_task_definition" "dystopiarobotics_backend" {
       ],
       secrets = [
         {
-          valueFrom = "arn:aws:ssm:${var.aws_region}:923082272114:parameter/dystopiarobotics/production/HUGGINGFACE_API_TOKEN",
+          valueFrom = "arn:aws:ssm:${var.aws_region}:708995440211:parameter/dystopiarobotics/production/HUGGINGFACE_API_TOKEN",
           name      = "HUGGINGFACE_API_TOKEN"
         }
       ],
@@ -1208,7 +1208,7 @@ resource "aws_ecs_task_definition" "dystopiarobotics_backend" {
 #   container_definitions = jsonencode([
 #     {
 #       name      = "dystopiarobotics-frontend"
-#       image     = "923082272114.dkr.ecr.us-east-1.amazonaws.com/dystopiarobotics:frontend"
+#       image     = "708995440211.dkr.ecr.us-east-1.amazonaws.com/dystopiarobotics:frontend"
 #       cpu       = 512
 #       memory    = 2048
 #       essential = true
@@ -1221,7 +1221,7 @@ resource "aws_ecs_task_definition" "dystopiarobotics_backend" {
 #       ],
 #       secrets = [
 #         {
-#           valueFrom = "arn:aws:ssm:${var.aws_region}:923082272114:parameter/dystopiarobotics/production/HUGGINGFACE_API_TOKEN",
+#           valueFrom = "arn:aws:ssm:${var.aws_region}:708995440211:parameter/dystopiarobotics/production/HUGGINGFACE_API_TOKEN",
 #           name      = "HUGGINGFACE_API_TOKEN"
 #         }
 #       ],
