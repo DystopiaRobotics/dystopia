@@ -386,7 +386,6 @@ def main():
 
     column_names = raw_eval_dataset.column_names
 
-
     # Load pretrained model and tokenizer
     #
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
